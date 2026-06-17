@@ -1,0 +1,19 @@
+---
+applications:
+  - name: btp-chat-agent
+    path: .
+    memory: 256M
+    disk_quota: 512M
+    buildpacks:
+      - nodejs_buildpack
+    stack: cflinuxfs4
+    env:
+      NODE_ENV: production
+      OPTIMIZE_MEMORY: true
+    services:
+      - my-destination-service      # Required: resolves "MyBackend" destination
+      - my-connectivity-service     # Required: Cloud Connector tunnel
+      - my-xsuaa-service            # Required: authentication tokens for Cloud SDK
+      - my-postgres-db              # Required: PostgreSQL for data persistence
+    health-check-type: http
+    health-check-http-endpoint: /

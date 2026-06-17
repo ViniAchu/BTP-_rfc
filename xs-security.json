@@ -1,0 +1,19 @@
+{
+  "xsappname": "btp-chat-agent",
+  "tenant-mode": "dedicated",
+  "scopes": [
+    {
+      "name": "$XSAPPNAME.view",
+      "description": "View and extract SAP table data"
+    }
+  ],
+  "role-templates": [
+    {
+      "name": "Viewer",
+      "description": "Can access the data agent and extract tables",
+      "scope-references": [
+        "$XSAPPNAME.view"
+      ]
+    }
+  ]
+}

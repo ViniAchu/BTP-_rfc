@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SAP BTP Data Agent</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      display: flex;
+      height: 100vh;
+      background: #eef2f7;
+      color: #2d3748;
+      overflow: hidden;
+    }
+
+    /* ── SIDEBAR ─────────────────────────────────────────────── */
+    #sidebar {
+      width: 280px;
+      min-width: 280px;
+      background: #1e293b;
+      color: #e2e8f0;
+      display: flex;
+      flex-direction: column;
+      padding: 0;
+    }
+    .sidebar-header {
+      background: #0f172a;
+      padding: 18px 20px;
+      font-size: 15px;
+      font-weight: 600;
+      letter-spacing: 0.3px;
+      border-bottom: 1px solid #334155;
+    }
+    .sidebar-section { padding: 16px 20px 0; }
+    .sidebar-section h4 {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #64748b;
+      margin-bottom: 10px;
+    }
+
+    /* Status indicator */
+    #status-box {
+      padding: 10px 14px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      background: #334155;
+      color: #94a3b8;
+      margin-bottom: 6px;
+      transition: background 0.4s, color 0.4s;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    #status-box.online  { background: #14532d; color: #86efac; }
+    #status-box.offline { background: #7f1d1d; color: #fca5a5; }
+    .status-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: currentColor; flex-shrink: 0;
+    }
+
+    /* History list */
+    #history-scroll {
+      flex: 1;
+      overflow-y: auto;
+      padding: 0 20px 16px;
+      margin-top: 12px;
+    }
+    #history-scroll::-webkit-scrollbar { width: 4px; }
+    #history-scroll::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+
+    .history-card {
+      background: #334155;
+      border-radius: 8px;
+      padding: 11px 13px;
+      margin-bottom: 8px;
+      font-size: 12.5px;
+    }
+    .history-card .tname { font-weight: 600; color: #e2e8f0; }
+    .history-card .tmeta { color: #94a3b8; font-size: 11px; margin-top: 3px; }
+    .history-card .download-link {
+      display: inline-block;
+      margin-top: 7px;
+      font-size: 12px;
+      color: #60a5fa;
+      text-decoration: none;
+      border: 1px solid #3b82f6;
+      padding: 3px 10px;
+      border-radius: 5px;
+      transition: background 0.2s;
+    }
+    .history-card .download-link:hover { background: #1e40af; color: #fff; }
+
+    #no-history {
+      font-size: 12px;
+      color: #475569;
+      text-align: center;
+      margin-top: 16px;
+    }
+
+    /* Clear button */
+    .sidebar-footer { padding: 12px 20px 20px; margin-top: auto; }
+    #clear-btn {
+      width: 100%;
+      padding: 9px;
+      background: #7f1d1d;
+      color: #fca5a5;
+      border: none;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    #clear-btn:hover { background: #991b1b; color: #fff; }
+
+    /* ── MAIN AREA ───────────────────────────────────────────── */
+    #main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      padding: 24px;
+      overflow: hidden;
+    }
+
+    /* Top bar */
+    #topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+    #topbar h1 { font-size: 18px; font-weight: 600; color: #1e293b; }
+    #topbar span {
+      font-size: 12px;
+      color: #64748b;
+      background: #e2e8f0;
+      padding: 4px 10px;
+      border-radius: 20px;
+    }
+
+    /* Chat window */
+    #chat-window {
+      flex: 1;
+      background: #fff;
+      border-radius: 12px;
+      padding: 20px 24px;
+      overflow-y: auto;
+      box-shadow: 0 1px 8px rgba(0,0,0,0.07);
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    #chat-window::-webkit-scrollbar { width: 4px; }
+    #chat-window::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+
+    .msg {
+      max-width: 78%;
+      padding: 11px 16px;
+      border-radius: 14px;
+      font-size: 13.5px;
+      line-height: 1.55;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+    .bot-msg {
+      align-self: flex-start;
+      background: #eff6ff;
+      color: #1e40af;
+      border-bottom-left-radius: 4px;
+    }
+    .user-msg {
+      align-self: flex-end;
+      background: #1e40af;
+      color: #fff;
+      border-bottom-right-radius: 4px;
+    }
+    .typing-indicator {
+      align-self: flex-start;
+      background: #eff6ff;
+      color: #93c5fd;
+      font-size: 20px;
+      padding: 8px 16px;
+      border-radius: 14px;
+      border-bottom-left-radius: 4px;
+      letter-spacing: 4px;
+    }
+
+    /* Input row */
+    #input-row {
+      display: flex;
+      gap: 10px;
+      margin-top: 14px;
+      align-items: center;
+    }
+    #user-input {
+      flex: 1;
+      padding: 13px 18px;
+      border: 1.5px solid #cbd5e1;
+      border-radius: 30px;
+      font-size: 14px;
+      outline: none;
+      transition: border 0.2s;
+      background: #fff;
+    }
+    #user-input:focus { border-color: #3b82f6; }
+    #send-btn {
+      padding: 12px 28px;
+      background: #2563eb;
+      color: #fff;
+      border: none;
+      border-radius: 30px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    #send-btn:hover { background: #1d4ed8; }
+    #send-btn:disabled { background: #93c5fd; cursor: not-allowed; }
+  </style>
+</head>
+<body>
+
+  <!-- ── SIDEBAR ──────────────────────────────────────────────── -->
+  <div id="sidebar">
+    <div class="sidebar-header">SAP BTP Data Agent</div>
+
+    <div class="sidebar-section">
+      <h4>Connectivity</h4>
+      <div id="status-box">
+        <div class="status-dot"></div>
+        <span id="status-text">Checking...</span>
+      </div>
+    </div>
+
+    <div class="sidebar-section">
+      <h4>Extraction History</h4>
+    </div>
+    <div id="history-scroll">
+      <div id="no-history">No extractions yet.</div>
+    </div>
+
+    <div class="sidebar-footer">
+      <button id="clear-btn" onclick="clearHistory()">Clear All History</button>
+    </div>
+  </div>
+
+  <!-- ── MAIN ─────────────────────────────────────────────────── -->
+  <div id="main">
+    <div id="topbar">
+      <h1>Table Extraction Chat</h1>
+      <span>BTP &rarr; Destination &rarr; Cloud Connector &rarr; SAP Backend</span>
+    </div>
+
+    <div id="chat-window">
+      <div class="msg bot-msg">
+        Hello! I am your SAP BTP Data Agent.<br>
+        Type a SAP table name (e.g. <b>USR02</b>) to extract, save, and download the data.
+      </div>
+    </div>
+
+    <div id="input-row">
+      <input
+        type="text"
+        id="user-input"
+        placeholder="Enter SAP table name, e.g. USR02 …"
+        onkeypress="if(event.key==='Enter') sendMessage()"
+        autocomplete="off"
+      />
+      <button id="send-btn" onclick="sendMessage()">Extract</button>
+    </div>
+  </div>
+
+  <script>
+    /* ── Status check ───────────────────────────────────────────── */
+    async function checkStatus() {
+      const box  = document.getElementById('status-box');
+      const text = document.getElementById('status-text');
+      try {
+        const res = await fetch('/status');
+        const data = await res.json();
+        if (res.ok && data.status === 'Online') {
+          box.className = 'online';
+          text.textContent = 'System Online';
+        } else {
+          throw new Error(data.message);
+        }
+      } catch {
+        box.className = 'offline';
+        text.textContent = 'System Offline';
+      }
+    }
+
+    /* ── Load history ───────────────────────────────────────────── */
+    async function loadHistory() {
+      try {
+        const res  = await fetch('/history');
+        const rows = await res.json();
+        const cont = document.getElementById('history-scroll');
+
+        if (!rows.length) {
+          cont.innerHTML = '<div id="no-history">No extractions yet.</div>';
+          return;
+        }
+
+        cont.innerHTML = rows.map(row => `
+          <div class="history-card">
+            <div class="tname">${row.table_name}</div>
+            <div class="tmeta">
+              ${Number(row.record_count).toLocaleString()} records &nbsp;|&nbsp;
+              ${new Date(row.last_extracted).toLocaleString()}
+            </div>
+            <a class="download-link" href="/export?table=${row.table_name}">
+              Download CSV
+            </a>
+          </div>
+        `).join('');
+      } catch {
+        document.getElementById('history-scroll').innerHTML =
+          '<div id="no-history">Failed to load history.</div>';
+      }
+    }
+
+    /* ── Send message ───────────────────────────────────────────── */
+    async function sendMessage() {
+      const input = document.getElementById('user-input');
+      const btn   = document.getElementById('send-btn');
+      const win   = document.getElementById('chat-window');
+      const msg   = input.value.trim();
+      if (!msg) return;
+
+      // Show user bubble
+      win.innerHTML += `<div class="msg user-msg">${escHtml(msg)}</div>`;
+      input.value = '';
+      btn.disabled = true;
+      win.scrollTop = win.scrollHeight;
+
+      // Show typing indicator
+      const typingId = 'typing-' + Date.now();
+      win.innerHTML += `<div class="msg typing-indicator" id="${typingId}">···</div>`;
+      win.scrollTop = win.scrollHeight;
+
+      try {
+        const res  = await fetch('/chat', {
+          method:  'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body:    JSON.stringify({ message: msg }),
+        });
+        const data = await res.json();
+
+        document.getElementById(typingId)?.remove();
+        win.innerHTML += `<div class="msg bot-msg">${data.reply}</div>`;
+        loadHistory();
+      } catch {
+        document.getElementById(typingId)?.remove();
+        win.innerHTML += `<div class="msg bot-msg" style="color:#991b1b">
+          Network error. Check your BTP app is running.
+        </div>`;
+      }
+
+      btn.disabled = false;
+      win.scrollTop = win.scrollHeight;
+    }
+
+    /* ── Clear history ──────────────────────────────────────────── */
+    async function clearHistory() {
+      if (!confirm('Delete ALL saved extraction data from the database?')) return;
+      try {
+        const res  = await fetch('/clear', { method: 'DELETE' });
+        const data = await res.json();
+        const win  = document.getElementById('chat-window');
+        win.innerHTML += `<div class="msg bot-msg">${data.reply}</div>`;
+        win.scrollTop = win.scrollHeight;
+        loadHistory();
+      } catch {
+        alert('Failed to clear history.');
+      }
+    }
+
+    /* ── Helpers ────────────────────────────────────────────────── */
+    function escHtml(s) {
+      return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
+
+    /* ── Init ───────────────────────────────────────────────────── */
+    checkStatus();
+    loadHistory();
+    setInterval(checkStatus, 30000);
+  </script>
+</body>
+</html>

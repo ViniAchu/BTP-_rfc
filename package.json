@@ -1,0 +1,19 @@
+{
+  "name": "btp-chat-agent",
+  "version": "1.0.0",
+  "description": "SAP BTP Chat Agent — extracts SAP backend table data via Cloud Connector and saves to PostgreSQL",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "test": "echo \"No tests\" && exit 0"
+  },
+  "dependencies": {
+    "@sap-cloud-sdk/http-client": "^4.6.0",
+    "@sap/xsenv": "^5.0.0",
+    "express": "^4.18.2",
+    "pg": "^8.11.3"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

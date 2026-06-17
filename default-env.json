@@ -1,0 +1,55 @@
+{
+  "_comment": "FILL IN YOUR REAL VALUES FROM BTP COCKPIT — DO NOT COMMIT THIS FILE TO GIT",
+  "VCAP_SERVICES": {
+    "destination": [
+      {
+        "label": "destination",
+        "plan": "lite",
+        "name": "my-destination-service",
+        "credentials": {
+          "clientid": "REPLACE_WITH_YOUR_CLIENTID",
+          "clientsecret": "REPLACE_WITH_YOUR_CLIENTSECRET",
+          "uri": "REPLACE_WITH_YOUR_DESTINATION_URI",
+          "url": "REPLACE_WITH_YOUR_XSUAA_URL"
+        }
+      }
+    ],
+    "connectivity": [
+      {
+        "label": "connectivity",
+        "plan": "lite",
+        "name": "my-connectivity-service",
+        "credentials": {
+          "clientid": "REPLACE_WITH_YOUR_CLIENTID",
+          "clientsecret": "REPLACE_WITH_YOUR_CLIENTSECRET",
+          "url": "REPLACE_WITH_YOUR_XSUAA_URL",
+          "onpremise_proxy_host": "REPLACE_WITH_PROXY_HOST",
+          "onpremise_proxy_port": "20003"
+        }
+      }
+    ],
+    "xsuaa": [
+      {
+        "label": "xsuaa",
+        "plan": "application",
+        "name": "my-xsuaa-service",
+        "credentials": {
+          "clientid": "REPLACE_WITH_YOUR_CLIENTID",
+          "clientsecret": "REPLACE_WITH_YOUR_CLIENTSECRET",
+          "url": "REPLACE_WITH_YOUR_XSUAA_URL"
+        }
+      }
+    ],
+    "postgresql": [
+      {
+        "label": "postgresql",
+        "plan": "development",
+        "name": "my-postgres-db",
+        "tags": ["postgres"],
+        "credentials": {
+          "uri": "postgresql://user:password@hostname:5432/dbname"
+        }
+      }
+    ]
+  }
+}
